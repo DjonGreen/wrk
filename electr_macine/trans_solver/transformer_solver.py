@@ -270,3 +270,11 @@ def time_overcurrent(i_s, i_i2t, t_i2t, k_i2t):
     return t_oc
 
 # time_overcurrent(660*1.81, 660*1.8, 10, 1.8)
+
+class Transformer:
+    
+    def __init__(self, U_gs_l: float, U_cs_l: float, f: float, m: int, SHGS: str, SHCS: str, Pxx: float, Ixx: float, Pk: float, Uk: float) -> None:
+        self.U_gs_l = U_gs_l
+        self.U_cs_l = U_cs_l
+        self.f = f
+    
