@@ -59,7 +59,7 @@ def trans_two_win_solver(S, U_gs_lin, U_cs_lin, f, m, SHGS, SHCS, Pxx, Ixx, Pk, 
 
     # Вычисление сопротивлений и индуктивностей
     Ixx_ie = I_gs_lin * (Ixx / 100)
-    Zm = U_gs_lin / (Ixx_ie * 3**0.5)
+    Zm = U_gs_lin / (Ixx_ie * 3**0.5) 
     Rm = Pxx / (m * Ixx_ie**2)
     Lm = abs(((((Zm) ** 2) - Rm ** 2)**0.5) / (2 * pi * f))
     Rk = Pk / (m * I_gs_lin**2)
@@ -77,6 +77,12 @@ def trans_two_win_solver(S, U_gs_lin, U_cs_lin, f, m, SHGS, SHCS, Pxx, Ixx, Pk, 
         U_cs_ph = U_cs_lin / 3**0.5
         I_cs_ph = S / (U_cs_lin * 3**0.5)
         I_cs_lin = I_cs_ph
+
+    if SHCS == '1':
+        U_cs_ph = U_cs_lin
+        I_cs_ph = S / U_cs_lin
+        I_cs_lin = I_cs_ph
+
 
     R2 = R1 / ((U_gs_ph / U_cs_ph)**2)
     L2 = L1 / ((U_gs_ph / U_cs_ph)**2)
