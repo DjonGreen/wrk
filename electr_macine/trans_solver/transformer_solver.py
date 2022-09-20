@@ -305,6 +305,14 @@ class Transformer:
         """
         return self.S / self.U_gs
     
+    def get_Zm(self) -> float:
+        """ Полное сопротивление магнитной цепи
+
+        Returns:
+            float: _description_
+        """
+        return self.U_gs / (self.get_current_gs()* (self.Ixx / 100))
+    
     def get_Rm(self) -> float:
         """ Активное сопротивление намагничивающего контура
 
@@ -320,7 +328,7 @@ class Transformer:
             float: Индуктивность {Гн}
         """
         from math import pi
-        return abs(((((self.U_gs / (self.get_current_gs()* (self.Ixx / 100))) ** 2) - self.get_Rm() ** 2)**0.5) / (2 * pi * self.f))
+        return abs((((self.get_Zm() ** 2) - self.get_Rm() ** 2)**0.5) / (2 * pi * self.f))
 
     def get_R1(self) -> float:
         """ Активное сопротивление первичной обмотки
@@ -389,9 +397,73 @@ class Transformer:
             f'\nИндуктивность обмотки {self.U_cs} В, L2 = {self.get_L2():.2e} Гн\n'
             f'\n################################')
 
-ols_prech_1 = Transformer(2500, 6000, 240, 50, 40, 5, 110, 5.5)
-ols_prech_2 = Transformer(2500, 240, 6000, 50, 40, 5, 110, 5.5)
 
+class Transformer3ph(Transformer):
+    from typing import Union
+    def __init__(self, S: float, U_gs: float, U_cs: float, f: float, Pxx: float, Ixx: float, Pk: float, Uk: float, SHGS: str, SHCS: str) -> None:
+        super().__init__(S, U_gs, U_cs, f, Pxx, Ixx, Pk, Uk)
+        self.SHGS = SHGS
+        self.SHCS = SHCS
+    
+    def get_current_gs(self) -> Union[float, str]:
+        """ Получение ЛИНЕЙНОГО тока первичной обмотки 
+
+        Returns:
+            float: Ток {А}
+        """
+        if self.SHGS == 'D' or self.SHGS == 'Y':
+            return self.S / (self.U_gs * 3**0.5)
+        else: 
+            return 'Неверный ввод схемы соединения. Введите Y или D.'
+
+    def get_current_gs_ph(self) -> float:
+
+        if self.SHGS == 'D':
+            return self.get_current_gs() / 3**0.5
+        if self.SHGS == 'Y':
+            return self.get_current_gs()
+    
+    def get_voltage_gs_ph(self) -> float:
+
+        if self.SHGS == 'D':
+            return self.U_gs
+        if self.SHGS == 'Y':
+            return self.U_gs / 3**0.5
+
+    def get_Zm(self) -> float:
+        """ Полное сопротивление магнитной цепи
+
+        Returns:
+            float: _description_
+        """
+        return self.U_gs / (self.get_current_gs() * (self.Ixx / 100) * 3**0.5)
+
+    def get_Rm(self) -> float:
+        return self.Pxx / (3 * (self.get_current_gs()* (self.Ixx / 100))**2)
+        #return self.get_Rm() / 3
+    
+    def get_R1(self) -> float:
+        return self.Pk / (2 * 3 * self.get_current_gs()**2)
+    
+    def get_L1(self) -> float:
+        from math import pi
+        return abs(((self.Uk * self.U_gs / (100 * self.get_current_gs() * 3**0.5))**2 - (2 * self.get_R1())**2)**0.5) / (2 * pi * self.f)
+
+    def get_result(self) -> float:
+        return (f'\n################################'
+            f'\nПараметры Трансформатора {self.S / 1000} кВА, {self.U_gs}/{self.U_cs} В ({self.SHGS}/{self.SHCS})\n'
+            f'\nЛинейный ток обмотки {self.U_gs} В, I1лин = {self.get_current_gs():.2f} А'
+            f'\nЛинейный ток обмотки {self.U_cs} В, I2лин = {self.get_current_cs():.2f} А\n'
+            f'\nАктивное сопротивление магнитной цепи, Rm = {self.get_Rm():.3f} Ом'
+            f'\nИндуктивность намагничивания, Lm = {self.get_Lm():.3f} Гн\n'
+            f'\nАктивное сопротивление обмотки {self.U_gs} В, R1 = {self.get_R1():.3f} Ом'
+            f'\nИндуктивность обмотки {self.U_gs} В, L1 = {self.get_L1():.2e} Гн\n'
+            f'\nАктивное сопротивление обмотки {self.U_cs} В, R2 = {self.get_R2():.3f} Ом'
+            f'\nИндуктивность обмотки {self.U_cs} В, L2 = {self.get_L2():.2e} Гн\n'
+            f'\n################################')        
+
+ols_prech_1 = Transformer(2500, 6000, 240, 50, 40, 5, 110, 5.5)
+ols_prech_2 = Transformer3ph(2500, 6000, 240, 50, 40, 5, 110, 5.5, "D", "D")
 
 print(ols_prech_1.get_result())
 print(ols_prech_2.get_result())
